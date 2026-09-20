@@ -85,9 +85,16 @@ export class MovieClip extends Sprite implements IMovieClipAdapter {
 		const prev_script_scope = MovieClip.current_script_scope;
 		MovieClip.current_script_scope = this;
 
-		script.axCall(this);
-
-		MovieClip.current_script_scope = prev_script_scope;
+		try {
+			script.axCall(this);
+		} catch (error) {
+			// Timeline callbacks are independent AVM2 entry points. An uncaught
+			// error must not abort the remaining clips or a caller's gotoAndPlay.
+			console.error('[MovieClip] Uncaught frame script error:',
+				error?.$Bgmessage || error?.message || error, error);
+		} finally {
+			MovieClip.current_script_scope = prev_script_scope;
+		}
 
 		if (this.queuedNavigationAction) {
 			// execute any pending FrameNavigation for this mc
