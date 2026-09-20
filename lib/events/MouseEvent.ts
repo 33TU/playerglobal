@@ -1,10 +1,14 @@
-import { MouseButtons, MouseEvent as MouseEventAway } from '@awayjs/scene';
+import type { MouseEvent as MouseEventAway } from '@awayjs/scene';
 import { Event } from './Event';
 import { notImplemented } from '@awayfl/swf-loader';
 import { InteractiveObject } from '../display/InteractiveObject';
 import { Point } from '../geom/Point';
 import { DisplayObject } from '../display/DisplayObject';
 import { SecurityDomain } from '../SecurityDomain';
+
+// MouseEvent.buttons uses the DOM bitmask. The primary button is bit 0.
+// Avoid a runtime import of @awayjs/scene's erased MouseButtons const enum.
+const PRIMARY_BUTTON_MASK = 1;
 
 /**
  * Copyright 2014 Mozilla Foundation
@@ -112,7 +116,7 @@ export class MouseEvent extends Event {
 		this.ctrlKey = awayEvent.ctrlKey;
 		this.shiftKey = awayEvent.shiftKey;
 
-		this.buttonDown = Boolean(awayEvent.buttons & MouseButtons.PRIMARY_BUTTON);
+		this.buttonDown = Boolean(awayEvent.buttons & PRIMARY_BUTTON_MASK);
 
 		//this._stageX = awayEvent.screenX;
 		//this._stageY = awayEvent.screenY;
