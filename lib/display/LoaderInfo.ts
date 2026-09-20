@@ -496,8 +496,9 @@ export class LoaderInfo extends EventDispatcher {
 	 *                       [Security](http://www.adobe.com/go/devnet_security_en).
 	 */
 	public get loader(): Loader {
-		return (this._loader instanceof Loader) ? this._loader : null;
-
+		// AS instances use the AVM2 class prototype, not the native TS prototype.
+		return (<SecurityDomain> this.sec).flash.display.Loader.axIsType(this._loader)
+			? <Loader> this._loader : null;
 	}
 
 	/**
