@@ -11,6 +11,9 @@ import { SecurityDomain } from '../SecurityDomain';
 import { AVMStage } from '@awayfl/swf-loader';
 import { FocusEvent } from '../events/FocusEvent';
 import { ContextMenu } from '../ui/ContextMenu';
+// A DOM event is adapted once per Flash stage, then bubbles from its focus.
+const keyboardEventStages = new WeakMap<object, Set<object>>();
+
 export class InteractiveObject extends DisplayObject {
 
 	private _keyDownListeners: Function[];
@@ -601,7 +604,6 @@ export class InteractiveObject extends DisplayObject {
 			this._keyUpListeners = [listener];
 			//console.log("initKeyUpListener", this)
 			document.addEventListener('keyup', callback);
-			document.addEventListener('keypress', callback);
 			return;
 		}
 		this._keyUpListeners.push(listener);
@@ -623,30 +625,7 @@ export class InteractiveObject extends DisplayObject {
 
 	private _keyUpCallbackDelegate: (event: any) => void;
 	private keyUpCallback(event: any = null): boolean {
-		if (AVMStage.instance().isPaused)
-			return;
-		if (window.event) {
-			window.event.returnValue = false;
-		}
-		event.preventDefault ? event.preventDefault() : (event.returnValue = false);
-		const newkeyBoardEvent: KeyboardEvent =
-			new (<SecurityDomain> this.sec).flash.events.KeyboardEvent(KeyboardEvent.KEY_UP,
-				true,
-				false,
-				event.charCode,
-				event.keyCode,
-				event.location,
-				event.ctrlKey,
-				event.altKey,
-				event.shiftKey);
-		/*(<any>newkeyBoardEvent).axInitializer(KeyboardEvent.KEY_UP);
-		newkeyBoardEvent.keyCode = event.keyCode;
-		newkeyBoardEvent.charCode = event.charCode;
-		newkeyBoardEvent.shiftKey = event.shiftKey;
-		newkeyBoardEvent.ctrlKey = event.ctrlKey;
-		newkeyBoardEvent.altKey = event.altKey;*/
-		this.dispatchEvent(newkeyBoardEvent);
-		return false;
+		return this.dispatchKeyboardEvent(event, KeyboardEvent.KEY_UP);
 	}
 
 	// ---------- event mapping functions for KeyboardEvent.KEY_DOWN:
@@ -656,7 +635,6 @@ export class InteractiveObject extends DisplayObject {
 			this._keyDownListeners = [listener];
 			//console.log("initKeyUpListener", this)
 			document.addEventListener('keydown', callback);
-			document.addEventListener('keypress', callback);
 			return;
 		}
 		this._keyDownListeners.push(listener);
@@ -669,7 +647,6 @@ export class InteractiveObject extends DisplayObject {
 				if (this._keyDownListeners.length == 1) {
 					this._keyDownListeners = null;
 					document.removeEventListener('keydown', callback);
-					document.removeEventListener('keypress', callback);
 					return;
 				}
 				this._keyDownListeners.splice(idx, 1);
@@ -679,23 +656,37 @@ export class InteractiveObject extends DisplayObject {
 
 	private _keyDownCallbackDelegate: (event: any) => void;
 	private keyDownCallback(event: any = null): boolean {
-		if (AVMStage.instance().isPaused)
-			return;
-		if (window.event) {
-			window.event.returnValue = false;
-		}
-		event.preventDefault ? event.preventDefault() : (event.returnValue = false);
-		const newkeyBoardEvent: KeyboardEvent =
-			new (<SecurityDomain> this.sec).flash.events.KeyboardEvent(KeyboardEvent.KEY_DOWN);
-		(<any>newkeyBoardEvent).axInitializer(KeyboardEvent.KEY_DOWN);
-		//newkeyBoardEvent.type=KeyboardEvent.KEY_DOWN;
-		newkeyBoardEvent.keyCode = event.keyCode;
-		newkeyBoardEvent.charCode = event.charCode;
-		newkeyBoardEvent.shiftKey = event.shiftKey;
-		newkeyBoardEvent.ctrlKey = event.ctrlKey;
-		newkeyBoardEvent.altKey = event.altKey;
+		return this.dispatchKeyboardEvent(event, KeyboardEvent.KEY_DOWN);
+	}
 
-		this.dispatchEvent(newkeyBoardEvent);
+	private dispatchKeyboardEvent(event: any, type: string): boolean {
+		const avmStage = AVMStage.instance();
+		const stage = this.activeStage;
+		if (!event || !stage || avmStage.isPaused || !avmStage.mouseManager.allowKeyInput)
+			return;
+
+		let stages = keyboardEventStages.get(event);
+		if (stages?.has(stage))
+			return;
+		if (!stages)
+			keyboardEventStages.set(event, stages = new Set());
+		stages.add(stage);
+
+		let target = avmStage.mouseManager.getFocus()?.container.adapter;
+		// A removed login/search field must not receive input after a frame
+		// change. Clear stale scene focus before its text-editing handler runs.
+		if (!target?.adaptee || target.stage !== stage) {
+			if (target)
+				avmStage.mouseManager.setFocus(null);
+			target = stage;
+		}
+
+		event.preventDefault ? event.preventDefault() : (event.returnValue = false);
+		const adaptedEvent = new (<SecurityDomain> target.sec).flash.events.KeyboardEvent(
+			type, true, false, event.charCode, event.keyCode, event.location,
+			event.ctrlKey, event.altKey, event.shiftKey);
+		adaptedEvent.target = target;
+		target.dispatchEvent(adaptedEvent);
 		return false;
 	}
 

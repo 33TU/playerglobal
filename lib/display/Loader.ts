@@ -247,6 +247,9 @@ export class Loader extends DisplayObjectContainer implements ILoader {
 
 		this._onAssetCompleteDelegate = (event: AssetEvent) => this._onAssetComplete(event);
 		const loaderContainer: LoaderContainer = new LoaderContainer();
+		// _onAssetComplete attaches the AS3 Bitmap or cloned SWF root. Parser
+		// content can be raw image data, which is not a display-list child.
+		loaderContainer.autoAddContent = false;
 		loaderContainer.addEventListener(AssetEvent.ASSET_COMPLETE, this._onAssetCompleteDelegate);
 
 		return loaderContainer;
@@ -533,6 +536,7 @@ export class Loader extends DisplayObjectContainer implements ILoader {
 		);
 
 		this._contentLoaderInfo._setApplicationDomain(this._loaderContext.applicationDomain);
+		this._prepareContent();
 
 		(<LoaderContainer> this._adaptee).load(
 			request.adaptee,
@@ -660,6 +664,8 @@ export class Loader extends DisplayObjectContainer implements ILoader {
 			);
 
 			this._contentLoaderInfo._setApplicationDomain(this._loaderContext.applicationDomain);
+			this._prepareContent();
+			this._isImage = false;
 			this._contentLoaderInfo.source = <any> bytes;
 
 			(<LoaderContainer> this._adaptee).loadData(
@@ -759,6 +765,18 @@ export class Loader extends DisplayObjectContainer implements ILoader {
 		// TODO: remove all DisplayObjects originating from the unloaded SWF from all lists and stop
 		// them.
 		this._unload(true, !!gc);
+	}
+
+	private _prepareContent(): void {
+		if (this._content && this._content.adaptee.parent === this._adaptee) {
+			(<AwayDisplayObjectContainer> this._adaptee).removeChild(this._content.adaptee);
+		}
+		this._content = null;
+
+		// Character IDs belong to one SWF. Reusing a factory can resolve a font
+		// ID to a shape from the previous file. Keep old factories intact for
+		// timelines that still reference them after their content is detached.
+		this._factory = new FlashSceneGraphFactory(<SecurityDomain> this.sec, this._contentLoaderInfo);
 	}
 
 	private _unload(stopExecution: boolean, gc: boolean): void {

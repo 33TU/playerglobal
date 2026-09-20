@@ -44,6 +44,8 @@ import { ColorTransform } from './geom/ColorTransform';
 import { Transform } from './geom/Transform';
 import { URLRequest } from './net/URLRequest';
 import { URLLoader } from './net/URLLoader';
+import { Socket } from './net/Socket';
+import { SecurityErrorEvent } from './events/SecurityErrorEvent';
 import { URLVariables } from './net/URLVariables';
 import { SharedObject } from './net/SharedObject';
 import { LoaderContext } from './system/LoaderContext';
@@ -121,6 +123,7 @@ export class SecurityDomain extends AXSecurityDomain {
 			TouchEvent: TouchEvent,
 			ProgressEvent: ProgressEvent,
 			IOErrorEvent: IOErrorEvent,
+			SecurityErrorEvent: SecurityErrorEvent,
 			TimerEvent:TimerEvent,
 			UncaughtErrorEvents: UncaughtErrorEvents,
 		},
@@ -155,6 +158,7 @@ export class SecurityDomain extends AXSecurityDomain {
 			Matrix3D: Matrix3D
 		},
 		net: {
+			Socket: Socket,
 			URLRequest: URLRequest,
 			URLLoader: URLLoader,
 			URLVariables: URLVariables,
