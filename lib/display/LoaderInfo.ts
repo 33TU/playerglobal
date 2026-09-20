@@ -29,25 +29,31 @@ export class LoaderInfoCompleteQueue {
 	}
 
 	public static executeQueue() {
+		// Detach this frame's work so callbacks can enqueue more completions
+		// without losing them when the current batch finishes.
 		const queue = this._queue;
+		this._queue = [];
 		let i = queue.length;
-		let allDone: boolean = true;
 		while (i > 0) {
 			i--;
 			const loderInfoItem = queue[i];
 			loderInfoItem.delayCnt--;
 			if (loderInfoItem.delayCnt > 0) {
-				allDone = false;
+				this._queue.unshift(loderInfoItem);
 			} else if (loderInfoItem.delayCnt == 0) {
 				const newEvent = new (<SecurityDomain> loderInfoItem.loaderInfo.sec).flash.events.Event(Event.COMPLETE);
 				newEvent.currentTarget = loderInfoItem.loaderInfo;
-				loderInfoItem.loaderInfo.dispatchEvent(newEvent);
+				try {
+					loderInfoItem.loaderInfo.dispatchEvent(newEvent);
+				} catch (error) {
+					// COMPLETE is an asynchronous Flash event. A script failure
+					// must not escape into the RAF callback and stop all frames.
+					console.error('[LoaderInfo] Uncaught complete event error:', error);
+				}
 
 			}
 
 		}
-		if (allDone)
-			queue.length = 0;
 	}
 }
 /**
