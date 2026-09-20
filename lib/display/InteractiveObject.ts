@@ -5,6 +5,7 @@ import { MouseEvent as MouseEventAway, TouchEvent as TouchEventAway, FocusEvent 
 import { MouseEvent } from '../events/MouseEvent';
 import { TouchEvent } from '../events/TouchEvent';
 import { KeyboardEvent } from '../events/KeyboardEvent';
+import { Event } from '../events/Event';
 
 import { IEventMapper } from '../events/IEventMapper';
 import { SecurityDomain } from '../SecurityDomain';
@@ -686,7 +687,7 @@ export class InteractiveObject extends DisplayObject {
 			type, true, false, event.charCode, event.keyCode, event.location,
 			event.ctrlKey, event.altKey, event.shiftKey);
 		adaptedEvent.target = target;
-		target.dispatchEvent(adaptedEvent);
+		target.dispatchInputEvent(adaptedEvent);
 		return false;
 	}
 
@@ -717,12 +718,25 @@ export class InteractiveObject extends DisplayObject {
 	}
 
 	private _mouseCallbackDelegate: (event: MouseEventAway) => void;
+
+	private dispatchInputEvent(event: Event, comesFromAway: boolean = false): void {
+		try {
+			this.dispatchEvent(event, comesFromAway);
+		} catch (error) {
+			// Native input starts an independent script invocation. Mouse and
+			// focus callbacks also run inside the frame loop: do not let an AS
+			// error prevent pointer cleanup, rendering, or the next frame.
+			console.error(`[InteractiveObject] Uncaught ${event.type} handler error:`,
+				error?.$Bgmessage || error?.message || error, error);
+		}
+	}
+
 	private mouseCallback(event: MouseEventAway): void {
 		const adaptedEvent: MouseEvent =
 			new (<SecurityDomain> this.sec).flash.events.MouseEvent(this.eventMappingInvert[event.type]);
 		adaptedEvent.fillFromAway(event);
 
-		this.dispatchEvent(adaptedEvent, true);
+		this.dispatchInputEvent(adaptedEvent, true);
 	}
 
 	private _touchCallbackDelegate: (event: TouchEventAway) => void;
@@ -731,7 +745,7 @@ export class InteractiveObject extends DisplayObject {
 			new (<SecurityDomain> this.sec).flash.events.TouchEvent(this.eventMappingInvert[event.type]);
 		adaptedEvent.fillFromAway(event);
 
-		this.dispatchEvent(adaptedEvent, true);
+		this.dispatchInputEvent(adaptedEvent, true);
 	}
 
 	// ---------- event mapping functions for FocusEvents:
@@ -744,7 +758,7 @@ export class InteractiveObject extends DisplayObject {
 		adaptedEvent.target = this;
 		//adaptedEvent.currentTarget=this;
 
-		this.dispatchEvent(adaptedEvent, true);
+		this.dispatchInputEvent(adaptedEvent, true);
 	}
 
 	//---------------------------stuff added to make it work:
