@@ -4,7 +4,6 @@ import {
 	GraphicsPath as AwayGraphicsPath,
 	GraphicsStrokeStyle,
 	GraphicsFillStyle,
-	GraphicsEndFill as AwayGraphicsEndFill,
 	SolidFillStyle,
 	GradientFillStyle,
 	BitmapFillStyle,
@@ -27,6 +26,10 @@ import { GraphicsBitmapFill } from './GraphicsBitmapFill';
 import { GraphicsStroke } from './GraphicsStroke';
 import { GraphicsPath } from './GraphicsPath';
 import { GraphicsTrianglePath } from './GraphicsTrianglePath';
+
+// @awayjs/graphics 0.5.101 does not export GraphicsEndFill. Match the
+// engine's IGraphicsData tag without requiring its newer constructor.
+const END_FILL_DATA_TYPE = '[graphicsdata EndFill]';
 
 export class Graphics extends ASObject implements IAssetAdapter {
 
@@ -466,7 +469,7 @@ export class Graphics extends ASObject implements IAssetAdapter {
 			);
 		}
 
-		if (type == AwayGraphicsEndFill.data_type)
+		if (type == END_FILL_DATA_TYPE)
 			return new sec.flash.display.GraphicsEndFill();
 
 		if (type == GraphicsStrokeStyle.data_type) {
