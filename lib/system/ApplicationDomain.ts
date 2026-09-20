@@ -113,13 +113,10 @@ export class ApplicationDomain extends ASObject {
 	 * will operate within this ApplicationDomain.
 	 */
 	public get domainMemory(): ByteArray {
-		console.log('[UNSAFE IMPLEMENTATION!] domainMemory:flash/ApplicationDomain');
 		return this._memory;
 	}
 
 	public set domainMemory(mem: ByteArray) {
-		console.log('[UNSAFE IMPLEMENTATION!] domainMemory:flash/ApplicationDomain');
-
 		// Missed types! ByteArray has buffer instead arraybuffer
 		if (mem && (!this._memoryView || this._memoryView.buffer !== (<any>mem).buffer)) {
 			this._memoryView = new DataView((<any>mem).buffer);
