@@ -1,9 +1,9 @@
-import { ByteArray, AssetBase } from '@awayjs/core';
+import { AssetBase } from '@awayjs/core';
 import { Font, SceneImage2D } from '@awayjs/scene';
 import { MovieClip as AwayMovieClip } from '@awayjs/scene';
 import { WaveAudio } from '@awayjs/core';
 import { Sound } from '../media/Sound';
-import { AXClass, ASObject, Multiname, AXApplicationDomain } from '@awayfl/avm2';
+import { AXClass, ASObject, Multiname, AXApplicationDomain, ByteArray, DomainMemoryBinding } from '@awayfl/avm2';
 import { SecurityDomain } from '../SecurityDomain';
 
 /**
@@ -53,8 +53,8 @@ export class ApplicationDomain extends ASObject {
 	private _definitions: Object;
 	private _font_definitions: Object;
 	private _audio_definitions: Object;
-	private _memoryView: DataView;
 	private _memory: ByteArray;
+	public readonly internal_memoryBinding: DomainMemoryBinding = { storage: null };
 
 	/*internal*/ axApplicationDomain: AXApplicationDomain;
 
@@ -113,25 +113,19 @@ export class ApplicationDomain extends ASObject {
 	 * will operate within this ApplicationDomain.
 	 */
 	public get domainMemory(): ByteArray {
-		console.log('[UNSAFE IMPLEMENTATION!] domainMemory:flash/ApplicationDomain');
 		return this._memory;
 	}
 
 	public set domainMemory(mem: ByteArray) {
-		console.log('[UNSAFE IMPLEMENTATION!] domainMemory:flash/ApplicationDomain');
-
-		// Missed types! ByteArray has buffer instead arraybuffer
-		if (mem && this._memory && (<any> this._memory).buffer !== (<any>mem).buffer) {
-			this._memoryView = new DataView((<any>mem).buffer);
-		}
 		this._memory = mem;
+		this.internal_memoryBinding.storage = mem ? mem.internalMemoryStorage : null;
 	}
 
 	/**
 	 * Internal DataView for using domainMemory in runtime
 	 */
 	public get internal_memoryView(): DataView {
-		return this._memoryView;
+		return this.internal_memoryBinding.storage ? this.internal_memoryBinding.storage.view : null;
 	}
 
 	/**
