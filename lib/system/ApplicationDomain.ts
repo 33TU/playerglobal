@@ -121,7 +121,7 @@ export class ApplicationDomain extends ASObject {
 		console.log('[UNSAFE IMPLEMENTATION!] domainMemory:flash/ApplicationDomain');
 
 		// Missed types! ByteArray has buffer instead arraybuffer
-		if (mem && this._memory && (<any> this._memory).buffer !== (<any>mem).buffer) {
+		if (mem && (!this._memoryView || this._memoryView.buffer !== (<any>mem).buffer)) {
 			this._memoryView = new DataView((<any>mem).buffer);
 		}
 		this._memory = mem;
@@ -131,6 +131,9 @@ export class ApplicationDomain extends ASObject {
 	 * Internal DataView for using domainMemory in runtime
 	 */
 	public get internal_memoryView(): DataView {
+		if (this._memory && (!this._memoryView || this._memoryView.buffer !== (<any>this._memory).buffer)) {
+			this._memoryView = new DataView((<any>this._memory).buffer);
+		}
 		return this._memoryView;
 	}
 
