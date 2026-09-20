@@ -1031,9 +1031,9 @@ export class TextField extends InteractiveObject {
 	 *   defining the bounding box of the character.
 	 */
 	public getCharBoundaries (charIndex: number): Rectangle {
-		// @todo
-		Debug.throwPIR('playerglobals/text/Textfield', 'getCharBoundaries', '');
-		return null;
+		const bounds = (<AwayTextField> this._adaptee).getCharBoundaries(charIndex | 0);
+		return bounds ? new (<SecurityDomain> this.sec).flash.geom.Rectangle(
+			bounds.x, bounds.y, bounds.width, bounds.height) : null;
 	}
 
 	/**
