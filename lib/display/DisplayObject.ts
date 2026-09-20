@@ -144,7 +144,6 @@ export class DisplayObject extends EventDispatcher implements IDisplayObjectAdap
 	}
 
 	protected _adaptee: AwayDisplayObject;
-	private _node: ContainerNode;
 	/**
 	 *
 	 *
@@ -302,10 +301,16 @@ export class DisplayObject extends EventDispatcher implements IDisplayObjectAdap
 	// --------------------- stuff needed because of implementing the existing IDisplayObjectAdapter
 
 	public get node(): ContainerNode {
-		if (!this._node)
-			this._node = AVMStage.instance().view.getNode(this._adaptee);
+		const view = AVMStage.instance().view;
+		let root = this.adaptee;
+		while (root.parent)
+			root = root.parent;
 
-		return this._node;
+		// Nodes are created lazily. Starting at a child can leave its node
+		// without ancestors until rendering first visits the display tree.
+		// Coordinate queries must include those ancestors even while offstage.
+		view.getNode(root);
+		return view.getNode(this.adaptee);
 	}
 
 	public get adaptee(): AwayDisplayObject {
