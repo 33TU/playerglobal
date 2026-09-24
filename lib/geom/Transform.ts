@@ -25,9 +25,13 @@ import { SecurityDomain } from '../SecurityDomain';
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+// Projection state belongs to the display transform, including explicit new Transform(object) wrappers.
+const projections = new WeakMap<AwayTransform, PerspectiveProjection>();
+
 // Class: Transform
 export class Transform extends ASObject {
 	private _adaptee: AwayTransform;
+	private _displayObject: DisplayObject;
 
 	static classInitializer: any = null;
 
@@ -35,13 +39,15 @@ export class Transform extends ASObject {
 		return this._adaptee;
 	}
 
-	constructor (displayObjectAdaptee: DisplayObject | AwayTransform) {
+	constructor (displayObjectAdaptee: DisplayObject | AwayTransform, owner: DisplayObject = null) {
 		super();
 
 		if (!displayObjectAdaptee)
 			this.sec.throwError('ArgumentError', Errors.NullPointerError, 'displayObject');
 
-		this._adaptee = (displayObjectAdaptee instanceof AwayTransform) ? displayObjectAdaptee : new AwayTransform();
+		this._displayObject = displayObjectAdaptee instanceof AwayTransform ? owner : displayObjectAdaptee;
+		this._adaptee = (displayObjectAdaptee instanceof AwayTransform)
+			? displayObjectAdaptee : displayObjectAdaptee.adaptee.transform;
 	}
 
 	public get matrix(): Matrix {
@@ -94,12 +100,30 @@ export class Transform extends ASObject {
 	}
 
 	public get perspectiveProjection(): PerspectiveProjection {
-		release || notImplemented('public flash.geom.Transform::get perspectiveProjection');
-
-		return new PerspectiveProjection();
+		if (projections.has(this._adaptee))
+			return projections.get(this._adaptee);
+		const owner = this._displayObject;
+		if (!owner || (owner.root !== owner && owner.stage !== owner))
+			return null;
+		const projection = new (<SecurityDomain> this.sec).flash.geom.PerspectiveProjection();
+		projection.attach(owner);
+		if (owner.stage)
+			projection.projectionCenter = new (<SecurityDomain> this.sec).flash.geom.Point(
+				owner.stage.stageWidth / 2, owner.stage.stageHeight / 2);
+		projections.set(this._adaptee, projection);
+		return projection;
 	}
 
 	public set perspectiveProjection(projection: PerspectiveProjection) {
-		release || notImplemented('public flash.geom.Transform::set perspectiveProjection');
+		if (projection) {
+			// Assignment copies values; do not reattach another object's projection.
+			const copy = new (<SecurityDomain> this.sec).flash.geom.PerspectiveProjection();
+			copy.fieldOfView = projection.fieldOfView;
+			copy.projectionCenter = projection.projectionCenter;
+			copy.attach(this._displayObject);
+			projections.set(this._adaptee, copy);
+		} else {
+			projections.set(this._adaptee, null);
+		}
 	}
 }

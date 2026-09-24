@@ -45,6 +45,7 @@ import { ColorTransform } from './geom/ColorTransform';
 import { Matrix } from './geom/Matrix';
 import { Matrix3D } from './geom/Matrix3D';
 import { Point } from './geom/Point';
+import { PerspectiveProjection } from './geom/PerspectiveProjection';
 import { Rectangle } from './geom/Rectangle';
 import { Transform } from './geom/Transform';
 import { Vector3D } from './geom/Vector3D';
@@ -424,7 +425,7 @@ export function initLink() {
 	M('flash.geom.Matrix', Matrix);
 	M('flash.geom.Matrix3D', Matrix3D);
 	//M('flash.geom.Orientation3D', Orientation3D);
-	//M('flash.geom.PerspectiveProjection', PerspectiveProjection);
+	M('flash.geom.PerspectiveProjection', PerspectiveProjection);
 	M('flash.geom.Point', Point);
 	M('flash.geom.Rectangle', Rectangle);
 	M('flash.geom.Transform', Transform);

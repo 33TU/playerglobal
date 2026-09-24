@@ -260,7 +260,7 @@ export class DisplayObject extends EventDispatcher implements IDisplayObjectAdap
 		this.eventMappingExtern[Event.ADDED_TO_STAGE] = '';
 		this.eventMappingExtern[Event.ADDED] = '';
 
-		this._transform = new (<SecurityDomain> this.sec).flash.geom.Transform(this.adaptee.transform);
+		this._transform = new (<SecurityDomain> this.sec).flash.geom.Transform(this.adaptee.transform, this);
 	}
 
 	protected createAdaptee(): AwayDisplayObject {
@@ -1226,7 +1226,7 @@ export class DisplayObject extends EventDispatcher implements IDisplayObjectAdap
 	public get transform(): Transform {
 		this._ctBlockedByScript = true;
 		return this._transform
-				|| (this._transform = new (<SecurityDomain> this.sec).flash.geom.Transform(this.adaptee.transform));
+				|| (this._transform = new (<SecurityDomain> this.sec).flash.geom.Transform(this.adaptee.transform, this));
 
 	}
 

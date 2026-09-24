@@ -42,6 +42,7 @@ import { Rectangle } from './geom/Rectangle';
 import { Matrix } from './geom/Matrix';
 import { ColorTransform } from './geom/ColorTransform';
 import { Transform } from './geom/Transform';
+import { PerspectiveProjection } from './geom/PerspectiveProjection';
 import { URLRequest } from './net/URLRequest';
 import { URLLoader } from './net/URLLoader';
 import { Socket } from './net/Socket';
@@ -154,6 +155,7 @@ export class SecurityDomain extends AXSecurityDomain {
 			Matrix: Matrix,
 			ColorTransform: ColorTransform,
 			Transform: Transform,
+			PerspectiveProjection: PerspectiveProjection,
 			Vector3D: Vector3D,
 			Matrix3D: Matrix3D
 		},
