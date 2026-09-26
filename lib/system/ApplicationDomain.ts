@@ -1,3 +1,4 @@
+import { FrameScriptManager } from '@awayjs/scene';
 import { AssetBase } from '@awayjs/core';
 import { Font, SceneImage2D } from '@awayjs/scene';
 import { MovieClip as AwayMovieClip } from '@awayjs/scene';
@@ -172,6 +173,7 @@ export class ApplicationDomain extends ASObject {
 			if (clone.adaptee.isAsset(AwayMovieClip)) {
 				(<AwayMovieClip>clone.adaptee).currentFrameIndex = 0;
 			}
+			FrameScriptManager.addPendingAS3Constructor(clone.adaptee);
 			return clone.adaptee;
 		} else if (this._font_definitions[className]) {
 			return this._font_definitions[className];
@@ -193,6 +195,7 @@ export class ApplicationDomain extends ASObject {
 			if (clone.adaptee.isAsset(AwayMovieClip)) {
 				(<AwayMovieClip>clone.adaptee).currentFrameIndex = 0;
 			}
+			FrameScriptManager.addPendingAS3Constructor(clone.adaptee);
 			return clone;
 		} else if (this._font_definitions[className]) {
 			return this._font_definitions[className];

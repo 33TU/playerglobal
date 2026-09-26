@@ -175,9 +175,6 @@ export class FlashSceneGraphFactory extends DefaultSceneGraphFactory implements 
 	 */
 	public createChildInstanceForTimeline(timeline: Timeline, symbolID: number, sessionID: number): IAsset {
 
-		// if this was called we might have new constructors from timeline to process
-		FrameScriptManager.invalidAS3Constructors = true;
-
 		const asset: IAsset = this.awaySymbols[symbolID];
 		let clone: DisplayObject;
 		if (asset.isAsset(Graphics)) {
@@ -200,6 +197,9 @@ export class FlashSceneGraphFactory extends DefaultSceneGraphFactory implements 
 		}
 
 		clone._sessionID = sessionID;
+		// A new timeline instance, or a plain container holding classed
+		// children, may carry AS3 constructors to run this frame.
+		FrameScriptManager.addPendingAS3Constructor(clone);
 		return clone;
 	}
 }
