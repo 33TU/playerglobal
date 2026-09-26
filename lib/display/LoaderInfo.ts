@@ -41,14 +41,16 @@ export class LoaderInfoCompleteQueue {
 			if (loderInfoItem.delayCnt > 0) {
 				this._queue.unshift(loderInfoItem);
 			} else if (loderInfoItem.delayCnt == 0) {
-				const newEvent = new (<SecurityDomain> loderInfoItem.loaderInfo.sec).flash.events.Event(Event.COMPLETE);
-				newEvent.currentTarget = loderInfoItem.loaderInfo;
-				try {
-					loderInfoItem.loaderInfo.dispatchEvent(newEvent);
-				} catch (error) {
-					// COMPLETE is an asynchronous Flash event. A script failure
-					// must not escape into the RAF callback and stop all frames.
-					console.error('[LoaderInfo] Uncaught complete event error:', error);
+				for (const type of [Event.INIT, Event.COMPLETE]) {
+					const newEvent = new (<SecurityDomain> loderInfoItem.loaderInfo.sec).flash.events.Event(type);
+					newEvent.currentTarget = loderInfoItem.loaderInfo;
+					try {
+						loderInfoItem.loaderInfo.dispatchEvent(newEvent);
+					} catch (error) {
+						// INIT and COMPLETE are asynchronous Flash events. A script
+						// failure must not escape into the RAF callback and stop all frames.
+						console.error('[LoaderInfo] Uncaught ' + type + ' event error:', error);
+					}
 				}
 
 			}
@@ -203,6 +205,10 @@ export class LoaderInfo extends EventDispatcher {
 		// Events that are supposed to be working are registered as eventMappingExtern:
 
 		this.eventMappingExtern[Event.COMPLETE] = 'LoaderInfo:Event.COMPLETE';
+		// Flash dispatches INIT once the loaded content's constructor has run,
+		// immediately before COMPLETE. Content that only listens for INIT
+		// (item previews for weapons and armor) never appeared without it.
+		this.eventMappingExtern[Event.INIT] = 'LoaderInfo:Event.INIT';
 		this.eventMappingExtern[ProgressEvent.PROGRESS] = 'LoaderInfo:ProgressEvent.PROGRESS';
 		this.eventMappingExtern[IOErrorEvent.IO_ERROR] = 'LoaderInfo:IOErrorEvent.IO_ERROR';
 
@@ -212,7 +218,6 @@ export class LoaderInfo extends EventDispatcher {
 		//this.eventMappingDummys[IOErrorEvent.IO_ERROR]="LoaderInfo:IOErrorEvent.IO_ERROR";
 		//this.eventMappingDummys[HTTPStatusEvent.IO_ERROR]="HTTPStatusEvent.IO_ERROR";
 		this.eventMappingDummys[Event.OPEN] = 'LoaderInfo:Event.OPEN';
-		this.eventMappingDummys[Event.INIT] = 'LoaderInfo:Event.INIT';
 
 		this._onLoaderStartDelegate = (event: AwayLoaderEvent) => this._onLoaderStart(event);
 		this._onLoadProgressDelegate = (event: URLLoaderEvent) => this._onLoadProgress(event);
