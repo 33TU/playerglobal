@@ -106,6 +106,18 @@ interface IListenerPriority{
 	listeners?: Array<(event: Event) => void>
 
 }
+// Flash reports an error thrown by a listener and carries on, it never
+// propagates out of dispatchEvent. Callers like SmartFoxClient's socket loop
+// only reset their state after dispatch returns, so letting one throw escape
+// breaks every later message.
+function callListener(listener: (event: Event) => void, event: Event) {
+	try {
+		listener.call(listener, event);
+	} catch (e) {
+		console.error('[EventDispatcher] Uncaught error in \'' + event.type + '\' listener:', e?.source ?? e);
+	}
+}
+
 function sortListenersByPriority(a: IListenerPriority, b: IListenerPriority) {
 	return a.priority < b.priority ? -1 : 1;
 }
@@ -230,7 +242,7 @@ export class ListenerObject {
 			let i = 0;
 			for (i = 0; i < numListeners; i++) {
 				if (listeners[i])
-					listeners[i].call(listeners[i], event);
+					callListener(listeners[i], event);
 			}
 			return;
 		}
@@ -248,7 +260,7 @@ export class ListenerObject {
 			//console.log("events", len);
 			for (i = 0; i < numListeners; i++) {
 				if (listeners[i])
-					listeners[i].call(listeners[i], event);
+					callListener(listeners[i], event);
 			}
 		}
 		if (this._listenersByPriority.length == 1) {
