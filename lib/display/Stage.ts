@@ -1061,19 +1061,20 @@ export class Stage extends DisplayObjectContainer {
 	// 80pro: todo: this was added because otherwise avm2 cant find these on Stage
 	//	but it should find them anyway, because its inheriting from Sprite...
 	//____________________________________
+	// Dispatch ADDED_TO_STAGE only once the child is attached: descendants
+	// read `stage` in their handlers (UIComponent.callLaterDispatcher does
+	// stage.addEventListener), and before the attach it walks up to nothing.
 	public addChild (child: DisplayObject): DisplayObject {
-		child.dispatch_ADDED_TO_STAGE();
 		const returnChild = super.addChild(child);
 		child.adaptee.hasDispatchedAddedToStage = true;
-		child.dispatchStaticEvent(Event.ADDED_TO_STAGE, child);
+		child.dispatch_ADDED_TO_STAGE(true);
 		return returnChild;
 	}
 
 	public addChildAt (child: DisplayObject, index: number): DisplayObject {
-		child.dispatch_ADDED_TO_STAGE();
 		const returnChild = super.addChildAt(child, index);
 		child.adaptee.hasDispatchedAddedToStage = true;
-		child.dispatchStaticEvent(Event.ADDED_TO_STAGE, child);
+		child.dispatch_ADDED_TO_STAGE(true);
 		return returnChild;
 	}
 
