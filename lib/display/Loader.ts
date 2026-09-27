@@ -256,6 +256,9 @@ export class Loader extends DisplayObjectContainer implements ILoader {
 	}
 
 	private _onAssetComplete(event: AssetEvent) {
+		if (this._parser instanceof SWFParser) {
+			this._contentLoaderInfo._setSWFVersion(this._parser.swfFile.swfVersion);
+		}
 
 		// 	todo: take care of all needed asset-types (sounds / fonts / textfield)
 		//	todo: update awd to support as3-class-identifier as extra property.
@@ -542,7 +545,7 @@ export class Loader extends DisplayObjectContainer implements ILoader {
 			request.adaptee,
 			null,
 			null,
-			(this._isImage)
+			this._parser = (this._isImage)
 				? new Image2DParser(this._factory)
 				: new SWFParser(this._factory)
 		);
@@ -672,7 +675,7 @@ export class Loader extends DisplayObjectContainer implements ILoader {
 				u8,
 				null,
 				null,
-				new SWFParser(this._factory));
+				this._parser = new SWFParser(this._factory));
 
 			/*
 			this.adaptee.addEventListener(URLLoaderEvent.LOAD_ERROR, (event: URLLoaderEvent)=>{

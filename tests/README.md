@@ -18,3 +18,16 @@ which previously threw `temp.axGetProperty is not a function` while reading
 
 This covers the scripting interface. Applying perspective projection parameters
 to rendered 3D geometry remains unimplemented.
+
+# Legacy frame labels
+
+With the same build, proxy and disposable browser setup, run:
+
+```sh
+node playerglobal/tests/check-legacy-frame-label.mjs
+```
+
+Checks that the loaded AQW timeline retains its own SWF version (9), rather
+than inheriting the loader's version (15). For SWF 9 and 10, both navigation
+methods must return to frame 1 on an unknown label and execute its stop script.
+Known labels and numeric frame strings are also checked. No login is required.

@@ -410,29 +410,23 @@ export class MovieClip extends Sprite implements IMovieClipAdapter {
 
 		scene = scene || (<any> adaptee).currentSceneName;
 
-		if (typeof frame === 'string') {
-			if (adaptee.timeline._labels[frame] == null) {
-				frame = parseInt(frame);
-
-				if (!isNaN(frame)) {
-
-					(<any> adaptee).jumpToIndex(frame - 1, scene);
-					if (stop) {
-						adaptee.stop();
-					} else {
-						adaptee.play();
-					}
-				}
-
+		if (typeof frame === 'string' && adaptee.timeline._labels[frame] == null) {
+			const frameNumber = parseInt(frame);
+			const swfVersion = this.loaderInfo?.swfVersion ?? (<any> this.sec).swfVersion;
+			if (!isNaN(frameNumber)) {
+				frame = frameNumber;
+			} else if (swfVersion <= 10) {
+				// Before SWF 11, an unknown label navigates to frame 1.
+				// Use normal navigation so constructors and frame scripts run.
+				frame = 1;
+			} else {
 				if (stop) {
-					//	for FP>10 we should throw a error and stop the timeline
-					if ((<any> this.sec).swfVersion > 10) {
+					// TODO: SWF 11+ should throw for an unknown label.
+					if (swfVersion > 10) {
 						adaptee.currentFrameIndex = 0;
 					}
-
 					this.stop();
 				}
-
 				return;
 			}
 		}

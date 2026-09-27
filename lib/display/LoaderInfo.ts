@@ -634,6 +634,10 @@ export class LoaderInfo extends EventDispatcher {
 		return this._swfVersion;
 	}
 
+	public _setSWFVersion(version: number): void {
+		this._swfVersion = version;
+	}
+
 	/**
 	 * An object that dispatches an `uncaughtError` event when an
 	 * unhandled error occurs in code in this LoaderInfo object's SWF file. An
